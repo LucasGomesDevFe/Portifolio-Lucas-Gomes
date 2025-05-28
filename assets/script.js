@@ -157,33 +157,45 @@ const typeEffect = () => {
 // Formulário de Contato
 const initForm = () => {
   const form = document.querySelector('.contact-form');
-  
+  const successMessage = document.createElement('p');
+  successMessage.className = 'success-message';
+  successMessage.style.display = 'none';
+  form.appendChild(successMessage);
+
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const email = form.querySelector('input[type="email"]');
     const submitBtn = form.querySelector('button[type="submit"]');
-    
-    // Validação simples
-    if (!email.value.includes('@')) {
-      email.style.borderColor = 'red';
-      setTimeout(() => {
-        email.style.borderColor = 'var(--color-secundary)';
-      }, 2000);
-      return;
-    }
-    
+    const originalBtnText = submitBtn.textContent;
+
     try {
       submitBtn.disabled = true;
       submitBtn.textContent = 'Enviando...';
       
-      // Simulação de envio (substitua pelo seu Formspree ou outro serviço)
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      form.innerHTML = '<p class="success-message">Mensagem enviada com sucesso! Entrarei em contato em breve.</p>';
+      const response = await fetch(form.action, {
+        method: 'POST',
+        body: new FormData(form),
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        successMessage.textContent = 'Mensagem enviada com sucesso! Entrarei em contato em breve.';
+        successMessage.style.display = 'block';
+        form.reset();
+      } else {
+        throw new Error('Erro no envio');
+      }
     } catch (error) {
-      form.insertAdjacentHTML('beforeend', '<p class="error-message">Ocorreu um erro. Tente novamente mais tarde.</p>');
+      successMessage.textContent = 'Ocorreu um erro. Por favor, tente novamente mais tarde.';
+      successMessage.style.color = '#e53e3e';
+      successMessage.style.display = 'block';
+    } finally {
       submitBtn.disabled = false;
-      submitBtn.textContent = 'Enviar';
+      submitBtn.textContent = originalBtnText;
+      setTimeout(() => {
+        successMessage.style.display = 'none';
+      }, 5000);
     }
   });
 };
